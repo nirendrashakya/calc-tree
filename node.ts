@@ -1,4 +1,5 @@
 import * as chalk from 'chalk';
+import { Traverser } from './tree-utility';
 export class Node<T> {
   name: string;
   running = false;
@@ -9,11 +10,33 @@ export class Node<T> {
   static depth = 1;
   isInput = false;
 
+  resets = {
+    1: this.reset1.bind(this),
+    2: this.reset2.bind(this)
+  };
+
   constructor(data?: T, name?: string) {
     if (data) this.isInput = true;
     this.data = data;
     this.name = name;
     this.children = [];
+  }
+
+  hasDescendant(node: Node<T>) {
+    const traverser = new Traverser<T>(this);
+    return traverser.find(node);
+  }
+
+  get hasChildren() {
+    return this.children && this.children.length > 0;
+  }
+
+  hasChild(node: Node<T>) {
+    if (this.hasChildren) {
+      return this.children.includes(node);
+    }
+
+    return false;
   }
 
   add(child: Node<T>) {
@@ -28,22 +51,40 @@ export class Node<T> {
     return this;
   }
 
-  reset() {
+  reset(type: number = 1) {
+    this.resets[type]();
+  }
+
+  reset1() {
     if (!this.isInput) {
       console.warn(`resetting: ${this.name}`);
       this.data = undefined;
-      if (this.children && this.children.length > 0) this.resetChildren();
+      if (this.children && this.children.length > 0) this.resetChildren1();
     }
   }
 
-  resetChildren() {
+  reset2() {
+    if (!this.isInput) {
+      console.warn(`resetting: ${this.name}`);
+      this.data = undefined;
+      if (this.children && this.children.length > 0) this.resetChildren2();
+    }
+  }
+
+  resetChildren1() {
     for (let child of this.children) {
-      if (child.data && !child.running) child.reset();
+      if (child.data && !child.running) child.reset(1);
+    }
+  }
+
+  resetChildren2() {
+    for (let child of this.children) {
+      if (child.data && !child.running && child.hasDescendant(this)) child.reset(1);
     }
   }
 
   run() {
-    this.print('run', this.name + (this.data ? ` => ${this.data}` : ''));
+    this.printBold('[Run]', this.name + (this.data ? ` => ${this.data}` : ''));
     this.count++;
     if (this.running && !this.data) {
       this.print('[transient]', this.name, '=>', 0);
@@ -57,9 +98,9 @@ export class Node<T> {
     if (this.recalc > 0) {
       for (let i = 1; i <= this.recalc; i++) {
         console.warn(`starting recalc for ${this.name} [${i}]`);
-        this.resetChildren();
+        this.resetChildren2();
         this.data = this.calc() as any;
-        this.print(`[Recalc: ${i}] ${this.name} => ${this.data}`)
+        this.print(`[Recalc: ${i}] ${this.name} => ${this.data}`);
       }
     } else {
       this.data = this.calc() as any;
