@@ -19,15 +19,18 @@ export class Node<T> {
   add(child: Node<T>) {
     if (!this.children) this.children = [];
     this.children.push(child);
+    return this;
   }
 
   remove(child: Node<T>) {
     const idx = this.children.indexOf(child);
     if (idx > -1) this.children.splice(idx, 1);
+    return this;
   }
 
   reset() {
     if (!this.isInput) {
+      console.warn(`resetting: ${this.name}`);
       this.data = undefined;
       if (this.children && this.children.length > 0) this.resetChildren();
     }

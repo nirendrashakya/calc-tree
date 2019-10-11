@@ -9,18 +9,23 @@ export class Runner {
     const c = new Node<number>(undefined, 'c');
     const d = new Node<number>(undefined, 'd');
     const e = new Node<number>(10, 'e');
+    const f = new Node<number>(undefined, 'f');
+    const g = new Node<number>(1, 'g');
+    const h = new Node<number>(undefined, 'h');
 
-    root.add(a);
-    root.add(b);
+    root.add(a).add(b);
 
-    a.add(c);
+    a.add(c).add(f);
     
     b.add(c);
 
     c.add(d);
 
-    d.add(a);
-    d.add(e);
+    d.add(a).add(e);
+
+    f.add(g).add(h);
+    
+    h.add(e);
 
     root.run()
     console.log('Final value =>', root.data);
